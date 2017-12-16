@@ -1,0 +1,8 @@
+colorama==0.3.9
+peewee==2.10.2
+peewee-db-evolve==0.6.7
+pudb==2017.1.4
+Pygments==2.2.0
+PyMySQL==0.7.11
+tornado==4.5.2
+urwid==1.3.1

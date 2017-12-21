@@ -3,7 +3,28 @@ from .model.sql import create_tables, migrate_tables
 
 
 def start():
-    pass
+    from .routes import ROUTES
+    from .view import functions
+
+    from tornado import httpserver, ioloop, web
+
+
+    class App(web.Application):
+
+        def __init__(self):
+            settings = {
+                'debug': options.debug,
+                'ui_methods': functions,
+            }
+
+            web.Application.__init__(self, ROUTES, **settings)
+
+    application = App()
+    http_server = httpserver.HTTPServer(application)
+
+    print('STARTING HYDT ON PORT: ', options.port)
+    http_server.listen(options.port)
+    ioloop.IOLoop.instance().start()
 
 
 def migrate():

@@ -1,7 +1,7 @@
 import sys
 
 from hydt.commands import start, migrate, how_to, build_database
-from hydt.config import options
+from hydt.options import options
 
 
 if __name__ == '__main__':

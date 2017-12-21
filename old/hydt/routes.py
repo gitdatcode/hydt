@@ -2,7 +2,7 @@ from .controller.auth import (RegistrationHandler, LoginHandler,
     LogoutHandler, ChangePasswordHandler)
 from .controller.home import HomeHandler
 from .controller.user import (UserHandler, UserPasswordHandler,
-    UserDayHandler)
+    UserDayHandler,)
 from .utils import UUID_RE
 
 

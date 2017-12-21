@@ -11,3 +11,7 @@ class UserPasswordHandler(BaseHandler):
 
 class UserDayHandler(BaseHandler):
     pass
+
+
+class UserInviteHandler(BaseHandler):
+    pass

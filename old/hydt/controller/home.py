@@ -2,4 +2,6 @@ from . import BaseHandler
 
 
 class HomeHandler(BaseHandler):
-    pass
+
+    async def get(self):
+        self.write('HOMEPAGE')

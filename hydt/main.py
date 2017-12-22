@@ -2,12 +2,15 @@ import argparse
 import json
 import re
 import sys
-from functools import reduce
 import operator
+
+from datetime import datetime
 
 from .color import COLORS
 from .emoji import EMOJI
-from .options import options
+from .model import create_tables, migrate_tables, User, UserDay
+from .config import options
+from .util import colorscale, get_text_sentiment
 
 
 def main():
@@ -17,25 +20,96 @@ def main():
     parser.add_argument('--user', '-u', help='the id for the user', type=int)
     parser.add_argument('--date', '-d', help='The date in MM/DD/YYYY format',
         type=str)
+    parser.add_argument('--sdate', '-sd',
+        help='The start date in MM/DD/YYYY format', type=str)
+    parser.add_argument('--edate', '-ed',
+        help='The end date in MM/DD/YYYY format', type=str)
     parser.add_argument('--emoji', '-e', help='The emoji to be parsed',
         type=str)
-
-    args = parser.parse_args()
-    command = args.command[0]
-
-    if args.emoji:
-        emoji = list(map(str.strip, re.split(r'[;,\s]\s*', args.emoji)))
-    else:
-        emoji = None
+    parser.add_argument('--notes', '-n',
+        help='Any notes to go along with the entry', type=str)
 
     try:
+        args = parser.parse_args()
+        command = args.command[0]
+        date = _make_date(args.date)
+        start_date = _make_date(args.sdate)
+        end_date = _make_date(args.edate)
+
+        if args.emoji:
+            emoji = list(map(str.strip, re.split(r'[;,\s]\s*', args.emoji)))
+        else:
+            emoji = None
+
         if command == 'score':
             data = get_emoji_data(emoji)
-            print('>>>', data)
+        elif command == 'user_score':
+            data = get_user_score(user=args.user, emoji=emoji, date=date,
+                notes=args.notes)
+            print(data)
+        elif command == 'user_score_range':
+            data = get_user_score_range(user=args.user, start=start_date,
+                end=end_date)
+            print(data)
+        elif command == 'create_database':
+            create_tables()
+        elif command == 'migrate':
+            migrate_tables()
+
     except Exception as e:
-        import traceback
-        traceback.print_exc()
         print(e, file=sys.stderr)
+
+
+def _make_date(date):
+    if date:
+        if 2 == 3:
+            raise Exception('The date format must be "mm/dd/yyyy"')
+
+        return datetime.strptime(date, '%m/%d/%Y').date()
+
+    return None
+
+
+def get_user_score(user, emoji, date, notes=None):
+    if not user or not emoji or not date:
+        raise Exception('Must pass in a user - u, emoji -e, and date -d')
+
+    user, _ = User.get_or_create(slack_id=user)
+    user_day, _ = UserDay.get_or_create(user=user, day=date)
+    data = get_emoji_data(emoji)
+    user_day.emoji = ','.join(emoji)
+    user_day.color = data['color']
+    user_day.color_shifted = data['color_shifted']
+    user_day.code = data['score']
+    user_day.notes = notes
+    user_day.sentiment = get_text_sentiment(notes)
+
+    user_day.save()
+
+    return {
+        'user': user.slack_id,
+        'date': str(date),
+        'data': data,
+    }
+
+
+def get_user_score_range(user, start, end):
+    user = User.select().where(slack_id=user)
+    user_days = (UserDay.select()
+        .where(
+            (UserDay.user == user),
+            (UserDay.day >= start),
+            (UserDay.day <= end),
+        ))
+    data = []
+
+    for day in user_days:
+        data.append()
+
+    return {
+        'user': user.slack_id,
+        'data': data,
+    }
 
 
 def get_emoji_data(emoji):
@@ -66,54 +140,6 @@ def calculate_score(emoji):
     return score // len(emoji), scores
 
 
-
-
-def calculate_mood(scores):
-    if len(scores) == 1:
-        return scores[0]
-
-    changes = []
-    print(scores)
-    for f, s in zip(scores, scores[1:]):
-        print(']]]', f, s)
-        score = (((s - f) / f) * f) + f
-
-        changes.append(score)
-
-    print('===', changes)
-
-    # return (sum(changes) / 3) * 100
-    return calculate_mood(changes)
-
-
-def calculate_moodx(scores):
-    print('SCORES', scores)
-    mood = scores.pop(0)
-    new = scores.pop(0)
-
-    while new and mood:
-        print('mn', new, mood)
-        mood = ((new - abs(mood)) / abs(mood)) * 100
-        print('==', mood)
-        try:
-            new = scores.pop(0)
-        except:
-            new = None
-
-    return mood
-
-
-def calculate_moodx(scores):
-    if len(scores) == 1:
-        return scores[0] / 100
-
-    pairs = []
-
-    for first, second in zip(scores, scores[1:]):
-        pairs.append(second - first)
-
-    return calculate_mood(pairs)
-
 def get_color(score, shift=None):
     score = float(score)
 
@@ -131,45 +157,9 @@ def get_color_shifted(color, scores):
         return color
 
     for first, second in zip(scores, scores[1:]):
-        percent = (second - first) / second
-        color = colorscale(color, percent)
+        percent = abs((second - first) / first)
+
+        if percent >= .01:
+            color = colorscale(color, percent)
 
     return color
-
-
-def clamp(val, minimum=0, maximum=255):
-    if val < minimum:
-        return minimum
-
-    if val > maximum:
-        return maximum
-
-    return val
-
-
-def colorscale(hexstr, scalefactor):
-    """
-    Scales a hex string by ``scalefactor``. Returns scaled hex string.
-
-    To darken the color, use a float value between 0 and 1.
-    To brighten the color, use a float value greater than 1.
-
-    >>> colorscale("#DF3C3C", .5)
-    #6F1E1E
-    >>> colorscale("#52D24F", 1.6)
-    #83FF7E
-    >>> colorscale("#4F75D2", 1)
-    #4F75D2
-    """
-
-    hexstr = hexstr.strip('#')
-
-    if scalefactor < 0 or len(hexstr) != 6:
-        return hexstr
-
-    r, g, b = int(hexstr[:2], 16), int(hexstr[2:4], 16), int(hexstr[4:], 16)
-    r = int(clamp(r * scalefactor))
-    g = int(clamp(g * scalefactor))
-    b = int(clamp(b * scalefactor))
-
-    return "#%02x%02x%02x" % (r, g, b)

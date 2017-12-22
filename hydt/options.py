@@ -1,5 +1,6 @@
 
 class Config:
+    """super simple configuration object"""
     options = {}
 
     def __init__(self, **options):

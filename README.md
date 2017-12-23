@@ -36,6 +36,7 @@ At this moment the data is living and will be changed.
 #### Current Color Values
 
 | Max Value | Color |
+| --------- | ---- |
 | 16 | '#3a5dae' |
 | 32 | '#681e5b' |
 | 48 | '#d81e05' |
@@ -46,6 +47,7 @@ At this moment the data is living and will be changed.
 #### Current emoji values
 
 | Emoji | Value |
+| ------ | ---- |
 | '😀' | 80.5 |
 | '😃' | 85.5 |
 | '😄' | 88.25 |

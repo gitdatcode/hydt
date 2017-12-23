@@ -50,12 +50,12 @@ def main():
         elif command == 'user_score_range':
             data = get_user_score_range(user=args.user, start=start_date,
                 end=end_date)
-            print(data)
         elif command == 'create_database':
             create_tables()
         elif command == 'migrate':
             migrate_tables()
 
+        print(json.dumps(data))
     except Exception as e:
         print(e, file=sys.stderr)
 
@@ -112,7 +112,7 @@ def get_user_score_range(user, start, end):
     }
 
 
-def get_emoji_data(emoji, notes):
+def get_emoji_data(emoji, notes=None):
     score, scores = calculate_score(emoji)
     color = get_color(score)
     color_shifted = get_color_shifted(color, scores)

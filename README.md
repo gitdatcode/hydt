@@ -1,6 +1,6 @@
 # HYDT
 
-How You Doin Today?
+How You Doin Today? HYDT is a simple command line tool that will take a set of emoji and return a corresponding color. That color will be augmented by the order in which the emoji were inputted and the sentiment of the optional notes.
 
 ## Installation
 

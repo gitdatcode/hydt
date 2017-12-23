@@ -76,13 +76,13 @@ def get_user_score(user, emoji, date, notes=None):
 
     user, _ = User.get_or_create(slack_id=user)
     user_day, _ = UserDay.get_or_create(user=user, day=date)
-    data = get_emoji_data(emoji)
+    data = get_emoji_data(emoji, notes)
     user_day.emoji = ','.join(emoji)
     user_day.color = data['color']
     user_day.color_shifted = data['color_shifted']
     user_day.code = data['score']
     user_day.notes = notes
-    user_day.sentiment = get_text_sentiment(notes)
+    user_day.sentiment = data['sentiment']
 
     user_day.save()
 
@@ -104,7 +104,7 @@ def get_user_score_range(user, start, end):
     data = []
 
     for day in user_days:
-        data.append()
+        data.append(day.data)
 
     return {
         'user': user.slack_id,
@@ -112,15 +112,17 @@ def get_user_score_range(user, start, end):
     }
 
 
-def get_emoji_data(emoji):
+def get_emoji_data(emoji, notes):
     score, scores = calculate_score(emoji)
     color = get_color(score)
     color_shifted = get_color_shifted(color, scores)
+    sentiment = get_text_sentiment(notes)
 
     return {
         'score': score,
         'color': color,
         'color_shifted': color_shifted,
+        'sentiment': sentiment,
     }
 
 

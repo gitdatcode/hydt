@@ -8,18 +8,17 @@ import peeweedbevolve
 from .config import options
 
 
-def get_database():
-    return SqliteDatabase(options.db_location)
+def get_database(location=None):
+    location = location or options.db_location
 
-
-DATABASE = get_database()
+    return SqliteDatabase(location)
 
 
 class BaseModel(Model):
     date_created = DateTimeField(default=datetime.now)
 
     class Meta:
-        database = DATABASE
+        database = get_database()
 
 
 class User(BaseModel):
@@ -41,12 +40,15 @@ class UserDay(BaseModel):
     color_shifted = CharField(null=True)
 
 
-def create_tables():
+def create_tables(location=None):
     tables = [UserDay, User]
+    db = get_database(location)
 
-    DATABASE.connect()
-    DATABASE.create_tables(tables)
+    db.connect()
+    db.create_tables(tables)
 
 
-def migrate_tables():
-    DATABASE.evolve()
+def migrate_tables(location=None):
+    db = get_database(location)
+
+    db.evolve()

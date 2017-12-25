@@ -41,7 +41,11 @@ def main():
         else:
             emoji = None
 
-        if command == 'score':
+        if command == 'emoji':
+            data = EMOJI
+        elif command == 'colors':
+            data = COLORS
+        elif command == 'score':
             data = get_emoji_data(emoji)
         elif command == 'user_score':
             data = get_user_score(user=args.user, emoji=emoji, date=date,

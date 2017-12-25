@@ -4,6 +4,14 @@ How You Doin Today? HYDT is a simple command line tool that will take a set of e
 
 ## Installation
 
+Global:
+
+```
+sudo python3 setup.py install
+```
+
+Or from within a virtual environment
+
 ```
 python3 setup.py install
 ```

@@ -17,7 +17,7 @@ def main():
     parser = argparse.ArgumentParser()
 
     parser.add_argument('command', nargs=1, type=str)
-    parser.add_argument('--user', '-u', help='the id for the user', type=int)
+    parser.add_argument('--user', '-u', help='the id for the user', type=str)
     parser.add_argument('--date', '-d', help='The date in MM/DD/YYYY format',
         type=str)
     parser.add_argument('--sdate', '-sd',

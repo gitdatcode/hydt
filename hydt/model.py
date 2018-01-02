@@ -23,7 +23,7 @@ class BaseModel(Model):
 
 class User(BaseModel):
     active = BooleanField(default=True)
-    slack_id = IntegerField(null=True)
+    slack_id = CharField(null=True)
     notification_hour = IntegerField(null=True)
     notification_minute = IntegerField(null=True)
     admin = BooleanField(default=False)

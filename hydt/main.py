@@ -30,6 +30,7 @@ def main():
         help='Any notes to go along with the entry', type=str)
 
     try:
+        data = {}
         args = parser.parse_args()
         command = args.command[0]
         date = _make_date(args.date)

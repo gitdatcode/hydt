@@ -1,6 +1,7 @@
 import os
+from pathlib import Path
 
-
+home = str(Path.home())
 HERE = os.path.dirname(__file__)
 APP = os.path.join(HERE, '..')
 
@@ -26,4 +27,4 @@ class Config:
 
 
 options = Config()
-options.db_location = os.path.join(HERE, 'hydt.db')
+options.db_location = os.path.join(home, 'hydt.db')

@@ -51,7 +51,6 @@ def main():
         elif command == 'user_score':
             data = get_user_score(user=args.user, emoji=emoji, date=date,
                 notes=args.notes)
-            print(data)
         elif command == 'user_score_range':
             data = get_user_score_range(user=args.user, start=start_date,
                 end=end_date)

@@ -1,7 +1,8 @@
-from datetime import datetime
+from datetime import datetime, date
 from uuid import uuid4
 
 from peewee import *
+from playhouse.shortcuts import model_to_dict
 
 import peeweedbevolve
 
@@ -19,6 +20,22 @@ class BaseModel(Model):
 
     class Meta:
         database = get_database()
+
+    @property
+    def data(self):
+        data = {}
+
+        for k in self._data.keys():
+            val = getattr(self, k)
+
+            if isinstance(val, (date, datetime)):
+                val = str(val)
+            elif isinstance(val, Model):
+                continue
+
+            data[k] = val
+
+        return data
 
 
 class User(BaseModel):

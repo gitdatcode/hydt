@@ -98,7 +98,7 @@ def get_user_score(user, emoji, date, notes=None):
 
 
 def get_user_score_range(user, start, end):
-    user = User.select().where(slack_id=user)
+    user = User.select().where(User.slack_id == user).get()
     user_days = (UserDay.select()
         .where(
             (UserDay.user == user),

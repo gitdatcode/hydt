@@ -1,0 +1,68 @@
+{% from datetime import date, datetime, timedelta %}
+{% from tornado.template import Template %}
+{% set data = globals().get('data', {}) %}
+{% set month = globals().get('month', datetime.now()) %}
+{% set row_count = 1 %}
+<h3 class="month-heading">{{ month.strftime('%B') }}</h3>
+<table>
+    <tr>
+        <th>M</th>
+        <th>T</th>
+        <th>W</th>
+        <th>T</th>
+        <th>F</th>
+        <th>S</th>
+        <th>S</th>
+    </tr>
+    {% set month = monthrange(month) %}
+    {% set pre_fill = True %}
+
+    {% for day in month %}
+        {% set day_of_week = int(day.strftime('%w')) %}
+        {% set week_of_month = (day.day - 1) // 7 + 1 %}
+        {% set day_data = data.get(day.day, {}) %}
+
+        {% if day_of_week == 1 %}
+            {% set row_count = row_count + 1 %}
+            <tr>
+        {% end %}
+
+        {% if week_of_month == 1 and pre_fill %}
+            {% set pre_fill = False %}
+            {% if day_of_week == 0 %}
+                {% set day_of_week = 7 %}
+            {% end %}
+
+            {% for i in range(1, day_of_week) %}
+                <td class="month-date">&nbsp;</td>
+            {% end %}
+        {% end %}
+
+        {% set emoji = ' '.join(day_data.get('emoji', '').split(',')) %}
+        {{ month_day_template.generate(day=day.day, score=day_data.get('code', None), emoji=emoji, autoescape=False) }}
+
+        {% if day_of_week > 0 and last_month_day == day.day %}
+            {% for i in range(0,  day_of_week + 1) %}
+                <td class="month-date">&nbsp;</td>
+            {% end %}
+        {% end %}
+
+        {% if day_of_week == 0 %}
+            </tr>
+        {% end %}
+    {% end %}
+
+    {% if row_count < 6 %}
+        {% for i in range(0, 6 - row_count) %}
+            <tr>
+                <td class="month-date">&nbsp;</td>
+                <td class="month-date">&nbsp;</td>
+                <td class="month-date">&nbsp;</td>
+                <td class="month-date">&nbsp;</td>
+                <td class="month-date">&nbsp;</td>
+                <td class="month-date">&nbsp;</td>
+                <td class="month-date">&nbsp;</td>
+            </tr>
+        {% end %}
+    {% end %}
+</table>

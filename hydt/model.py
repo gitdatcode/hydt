@@ -11,7 +11,7 @@ from .config import options
 
 def get_database(location=None):
     location = location or options.db_location
-
+    print('SAVING DB', location)
     return SqliteDatabase(location)
 
 

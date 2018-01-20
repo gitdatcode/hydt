@@ -1,16 +1,28 @@
 import argparse
+import calendar
 import json
 import re
 import sys
 import operator
+import os
+import errno
 
-from datetime import datetime
+from collections import OrderedDict
+from datetime import datetime, timedelta, date
+
+from tornado import template
 
 from .color import COLORS
 from .emoji import EMOJI
 from .model import create_tables, migrate_tables, User, UserDay
 from .config import options
-from .util import colorscale, get_text_sentiment
+from .util import colorscale, get_text_sentiment, daterange, monthrange
+
+
+NOW = datetime.now()
+WEEK = NOW.isocalendar()[1]
+JAN_1 = datetime(day=1, month=1, year=NOW.year).date()
+DEC_31 = datetime(day=31, month=12, year=NOW.year).date()
 
 
 def main():
@@ -28,6 +40,9 @@ def main():
         type=str)
     parser.add_argument('--notes', '-n',
         help='Any notes to go along with the entry', type=str)
+    parser.add_argument('--year', '-y', default=NOW.year, help='The year')
+    parser.add_argument('--week', '-w', default=WEEK, help='The week')
+
 
     try:
         data = {}
@@ -54,6 +69,10 @@ def main():
         elif command == 'user_score_range':
             data = get_user_score_range(user=args.user, start=start_date,
                 end=end_date)
+        elif command == 'generate_week':
+            file_name = generate_week_template(user=args.user, week=args.week,
+                year=args.year)
+            data = {'file_name': file_name}
         elif command == 'create_database':
             create_tables()
         elif command == 'migrate':
@@ -98,19 +117,62 @@ def get_user_score(user, emoji, date, notes=None):
 
 
 def get_user_score_range(user, start, end):
-    user = User.select().where(User.slack_id == user).get()
-    user_days = (UserDay.select()
-        .where(
-            (UserDay.user == user),
-            (UserDay.day >= start),
-            (UserDay.day <= end),
-        ))
-    data = []
+    """returns the user data for a given date range will be in the format of
 
-    for day in user_days:
-        data.append(day.data)
+        {
+            'user': user.id<String>,
+            'date': {
+            
+            },
+            'data': {
+                year<Int>: {
+                    month<Int>: {
+                        day<Int>: {
+                            'score': <Float>,
+                            'emoji': <String>,
+                            'notes': <String>,
+                            'color': <String>,
+                            'color_shifted': <String>,
+                            'sentiment': <Float>,
+                        }
+                    }
+                }
+            }
+        }
+    """
+    user = User.select().where(User.slack_id == user).get()
+    data = OrderedDict()
+
+    for d in daterange(start, end):
+        month_year = d.strftime('%m_%Y')
+
+        if d.year not in data:
+            data[d.year] = OrderedDict()
+
+        if d.month not in data[d.year]:
+            data[d.year][d.month] = OrderedDict()
+
+        if d.day not in data[d.year][d.month]:
+            try:
+                if not isinstance(d, date):
+                    d = datetime.date()
+
+                user_day = (UserDay.select()
+                    .where(
+                        (UserDay.user == user),
+                        (UserDay.day == d),
+                    ).get())
+                day_data = user_day.data
+            except Exception as e:
+                day_data = {}
+
+            data[d.year][d.month][d.day] = day_data
 
     return {
+        'date': {
+            'start': start.strftime('%m/%d/%Y'),
+            'end': end.strftime('%m/%d/%Y'),
+        },
         'user': user.slack_id,
         'data': data,
     }
@@ -143,7 +205,7 @@ def calculate_score(emoji):
         score += val
         scores.append(val)
 
-    return score // len(emoji), scores
+    return score / len(emoji), scores
 
 
 def get_color(score, shift=None):
@@ -169,3 +231,55 @@ def get_color_shifted(color, scores):
             color = colorscale(color, percent)
 
     return color
+
+
+def generate_week_template(user, week=WEEK, year=NOW.year):
+    # templates
+    loader = template.Loader(options.template_path, autoescape=None)
+    overview_template = loader.load('report/month/overview.html')
+    month_template = loader.load('report/month/month.html')
+    month_day_template = loader.load('report/month/day.html')
+    week_template = loader.load('report/week/week.html')
+    week_day_template = loader.load('report/week/day.html')
+    report_template = loader.load('report/report.html')
+
+    # data
+    week_start = datetime.strptime('{}W{} MON'.format(year, week), '%YW%U %a')
+    week_end = week_start + timedelta(days=6)
+    week_data = get_user_score_range(user=user, start=week_start.date(),
+        end=week_end.date())
+    year_data = get_user_score_range(user=user, start=JAN_1, end=DEC_31)
+    cal_months = []
+
+    def calendar_month(month, year, data):
+        end = calendar.monthrange(year, month)
+        month = date(month=month, year=year, day=1)
+
+        return (month_template.generate(month=month, last_month_day=end[1],
+            monthrange=monthrange, month_day_template=month_day_template,
+            data=data, autoescape=False).decode('utf-8'))
+
+    for month, data in year_data['data'][year].items():
+        cal_months.append(calendar_month(month=month, year=year, data=data))
+
+    week_content = week_template.generate(week=week,
+        data=week_data['data'][year][week_start.month],
+        week_day_template=week_day_template).decode('utf-8')
+    months = overview_template.generate(months=cal_months, year=year)
+    report = report_template.generate(months=months, week=week_content,
+        autoescape=False).decode('utf-8')
+    file_name = '{dir}/{user}/{year}/{week}.html'.format(
+        dir=options.report_save_directory, user=user, year=year, week=week)
+
+    # save the file
+    if not os.path.exists(os.path.dirname(file_name)):
+        try:
+            os.makedirs(os.path.dirname(file_name))
+        except OSError as exc: # Guard against race condition
+            if exc.errno != errno.EEXIST:
+                raise
+
+    with open(file_name, 'w') as f:
+        f.write(report)
+
+    return file_name

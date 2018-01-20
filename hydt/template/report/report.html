@@ -1,0 +1,21 @@
+{% set title = globals().get('title', 'DEFAULT TITLE') %}
+{% set week = globals().get('week', 'weekZZZ') %}
+{% set months = globals().get('months', 'months') %}
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <title>{{ title }}</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <style type="text/css" media="screen">
+            {% include '../assets/css/style.css' %}
+        </style>
+    </head>
+    <body>
+        <div class="wrapper">
+            <h1 class="title">Energy Check</h1>
+            {{ week }}
+            {{ months }}
+        </div>
+    </body>
+</html>

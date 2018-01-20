@@ -1,0 +1,13 @@
+{% import datetime %}
+{% set now = datetime.datetime.now() %}
+{% set week = globals().get('week', now.isocalendar()[1]) %}
+<section class="summary summary-week">
+    <h2 class="summary-heading">Week {{ week }} Summary</h2>
+    <h3 class="week-range">January 1st — 7th</h3>
+    <ol class="weekday-group">
+        {% for day, day_data in data.items() %}
+            {% set emoji = ' '.join(day_data.get('emoji', '').split(',')) %}
+            {{ week_day_template.generate(date=day, score=day_data.get('code', None), emoji=emoji, color=day_data.get('color', 'purple'), autoescape=False) }}
+        {% end %}
+    </ol>
+</section>

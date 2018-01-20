@@ -1,4 +1,5 @@
 colorama==0.3.9
+MarkupSafe==1.0
 nltk==3.2.5
 peewee==2.10.2
 peewee-db-evolve==0.6.7

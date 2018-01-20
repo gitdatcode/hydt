@@ -1,0 +1,11 @@
+<td class="month-date">
+    {% if score %}
+        <button class="btn-date scale-09 tooltip-is-active">{{ day }}</button>
+        <!-- <div class="tooltip">
+            <div class="score">{{ score }}</div>
+            <div class="entry">{{ emoji }}</div>
+        </div> -->
+    {% else %}
+        <button class="btn-date">{{ day }}</button>
+    {% end %}
+</td>

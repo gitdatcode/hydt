@@ -1,0 +1,13 @@
+{% import datetime %}
+{% set months = globals().get('months', '') %}
+{% set year = globals().get('year', datetime.datetime.now().year) %}
+<section class="summary summary-year">
+    <h2 class="summary-heading">{{ year }} Overview</h2>
+    <ol class="year-list">
+        {% for month in months %}
+            <li class="month">
+                {{ month }}
+            </li>
+        {% end %}
+    </ol>
+</section>

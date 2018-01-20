@@ -1,0 +1,20 @@
+{% import datetime %}
+{% set now = datetime.datetime.now() %}
+{% set date = globals().get('date', now.day) %}
+{% set day_name = globals().get('day_name', now.strftime('%A')) %}
+{% set score = globals().get('score', 0) %}
+{% set emoji = globals().get('emoji', '') %}
+{% set color = globals().get('color', 'red') %}
+<li class="weekday">
+    <h4 class="date">{{ date }} • {{ day_name }}</h4>
+    <div class="card scale-09" style="background-color: {{ color }};">
+
+        {% if score %}
+            <div class="score">{{ score }}</div>
+        {% end %}
+
+        {% if emoji %}
+            <div class="entry">{{ emoji }}</div>
+        {% end %}
+    </div>
+</li>

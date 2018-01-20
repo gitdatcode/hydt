@@ -1,3 +1,6 @@
+import calendar
+
+from datetime import date, datetime, timedelta
 from textblob import TextBlob
 
 
@@ -46,3 +49,15 @@ def colorscale(hexstr, scalefactor):
     b = int(clamp(b * scalefactor))
 
     return "#%02x%02x%02x" % (r, g, b)
+
+
+def daterange(start_date, end_date):
+    for n in range(int ((end_date - start_date).days) + 1):
+        yield start_date + timedelta(n)
+
+
+def monthrange(month):
+    end = calendar.monthrange(month.year, month.month)
+    end = date(month=month.month, day=end[1], year=month.year)
+
+    return daterange(month, end)

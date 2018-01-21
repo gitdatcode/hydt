@@ -30,3 +30,4 @@ options = Config()
 options.db_location = os.path.join(home, 'hydt.db')
 options.template_path = os.path.join(HERE, 'template')
 options.report_save_directory = os.path.join(home, 'hydt', 'reports')
+options.host_name = 'http://energy.datcode.io'

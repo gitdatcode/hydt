@@ -56,7 +56,7 @@ def main():
             emoji = list(map(str.strip, re.split(r'[;,\s]\s*', args.emoji)))
         else:
             emoji = None
-        import pudb; pu.db
+
         if command == 'emoji':
             data = EMOJI
         elif command == 'colors':
@@ -72,7 +72,12 @@ def main():
         elif command == 'generate_week':
             file_name = generate_week_template(user=args.user, week=args.week,
                 year=args.year)
-            data = {'file_name': file_name}
+            uri = file_name.replace(options.report_save_directory,
+                options.host_name)
+            data = {
+                'file_name': file_name,
+                'uri': uri,
+            }
         elif command == 'create_database':
             create_tables()
         elif command == 'migrate':

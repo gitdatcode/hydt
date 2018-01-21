@@ -40,8 +40,8 @@ def main():
         type=str)
     parser.add_argument('--notes', '-n',
         help='Any notes to go along with the entry', type=str)
-    parser.add_argument('--year', '-y', default=NOW.year, help='The year')
-    parser.add_argument('--week', '-w', default=WEEK, help='The week')
+    parser.add_argument('--year', '-y', type=int, default=NOW.year, help='The year')
+    parser.add_argument('--week', '-w', type=int, default=WEEK, help='The week')
 
 
     try:
@@ -56,7 +56,7 @@ def main():
             emoji = list(map(str.strip, re.split(r'[;,\s]\s*', args.emoji)))
         else:
             emoji = None
-
+        import pudb; pu.db
         if command == 'emoji':
             data = EMOJI
         elif command == 'colors':
